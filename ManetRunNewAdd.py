@@ -7,8 +7,12 @@
 """
 from datetime import datetime
 import random
+
+import numpy as np
 import simpy
 import xlsxwriter
+from numpy import log10
+
 from network.ManetTopology import manet_generator, find_net, find_e_subnet, find_e_node
 from network.Package import Package
 
@@ -24,7 +28,7 @@ RECEIVE_STREAM_POOL = list()
 COMPLETE_RECEIVE_STREAM_POOL = list()
 STREAM_ID = 1
 STREAM_SIZE = 5
-PACKAGE_LOSS_RATE = 0.1
+PACKAGE_LOSS_RATE = 0.001
 
 
 def sim_run(env, node_list, SUBNET_LIST, in_detection_p, out_detection_p, mp):
@@ -33,7 +37,7 @@ def sim_run(env, node_list, SUBNET_LIST, in_detection_p, out_detection_p, mp):
     while True:
         if env.now % 10000 == 0:
             print('当前仿真间隙：', env.now)
-        if env.now == SLOT_NUM:
+        if len(COMPLETE_RECEIVE_STREAM_POOL) >= 5000:
             # print('当前仿真间隙：', env.now, "当前检测概率：", dp, "当前节点恶意程度:", mp)
             break
         generate_message(node_list, in_detection_p)
@@ -204,17 +208,18 @@ def generate_leaked_packet(node_list, SUBNET_LIST, mp):
         new_package.new_add_status = 1
 
         # 将数据包放入发送缓存池,考虑优先发送恶意新增，所以选择头部插入
-        SUBNET_LIST[0].node_list[C].buffer_message_pool.insert(0,new_package)
+        SUBNET_LIST[0].node_list[C].buffer_message_pool.insert(0, new_package)
         generate_new_add_stream(new_package)
         PACKAGE_ID += 1
 
 
-
-def clear_net(node, SUBNET_LIST):
-    for n in node:
-        n.clear()
-    for net in SUBNET_LIST:
-        net.clear_event()
+def clear_net(node_list):
+    global SEND_STREAM_POOL, RECEIVE_STREAM_POOL, COMPLETE_RECEIVE_STREAM_POOL
+    for node in node_list:
+        node.clear()
+    SEND_STREAM_POOL = list()
+    RECEIVE_STREAM_POOL = list()
+    COMPLETE_RECEIVE_STREAM_POOL = list()
 
 
 # 对于每个检测概率：考虑采取不同的产生错误数据包的概率（恶意程度）
@@ -253,14 +258,32 @@ if __name__ == '__main__':
     # 在中间转发的时候被丢包，恶意新增的数据包，被篡改路径的数据包
     # 代码逻辑
     G, SUBNET_LIST = manet_generator()
-    node = list(G.nodes())
+    node_list = list(G.nodes())
     in_detection_p = 1
     out_detection_p = 1
-    env = simpy.Environment()
-    mp = 0.001
-    env.process(sim_run(env, node, SUBNET_LIST, in_detection_p, out_detection_p, mp))
-    env.run()
-    for stream in RECEIVE_STREAM_POOL:
-        for package in stream.package_list:
-            if package.new_add_status == 1 and package.loss_status == 1:
-                print(stream)
+    malicious_p = [0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1]
+    for mp in malicious_p:
+        env = simpy.Environment()
+        env.process(sim_run(env, node_list, SUBNET_LIST, in_detection_p, out_detection_p, mp))
+        env.run()
+        for stream in COMPLETE_RECEIVE_STREAM_POOL:
+            only_nature_loss_package_num = 0;
+            new_add_and_loss_package_num = 0;
+            only_new_add_package_num = 0;
+            no_new_add_no_loss_package_num = 0;
+            for package in stream.package_list:
+                if package.new_add_status == 1 and package.loss_status == 1:
+                    new_add_and_loss_package_num += 1
+                if package.new_add_status == -1 and package.loss_status == 1:
+                    only_nature_loss_package_num += 1
+                if package.new_add_status == 1 and package.loss_status == -1:
+                    only_new_add_package_num += 1
+                if package.new_add_status == -1 and package.loss_status == -1:
+                    no_new_add_no_loss_package_num += 1
+            print("stream:%s" % stream.id, "\tonly_nature_loss_package_num:%s" % only_nature_loss_package_num,
+                  "\tnew_add_and_loss_package_num:%s" % new_add_and_loss_package_num,
+                  "\tonly_new_add_package_num:%s" % only_new_add_package_num,
+                  "\tno_new_add_no_loss_package_num:%s" % no_new_add_no_loss_package_num, "\tsize:%s" % stream.size,"\tmp:%s"%mp)
+        #     这里的话呢是考虑那四种参数的问题
+
+        clear_net(node_list)

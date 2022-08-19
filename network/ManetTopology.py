@@ -113,69 +113,6 @@ def manet_generator():  # 不考虑节点的移动性，固定拓扑
             Net.node_list.append(n)
         i+=1
         SUBNET_LIST.append(Net)
-
-    # Net_1 = Subnet(Type.subnet_1)
-    # Net_2 = Subnet(Type.subnet_2)
-    # Net_3 = Subnet(Type.subnet_3)
-    # Net_other = Subnet(Type.external)
-    # for N in node:
-    #     if 1 < N.mac < 10:
-    #         N.type = Type.subnet_A
-    #         Net_A.node_list.append(N)
-    #     elif 9 < N.mac < 15:
-    #         N.type = Type.subnet_B
-    #         Net_B.node_list.append(N)
-    #     elif 14 < N.mac < 20:
-    #         N.type = Type.subnet_C
-    #         Net_C.node_list.append(N)
-    #     else:
-    #         N.type = Type.external
-    #         Net_other.node_list.append(N)
-    # SUBNET_LIST = [Net_A, Net_B, Net_C,Net_other]
-    # 初始化监视器
-    super_node = ManetNode(mac=0,type = Type.external) #只是用来统计正常新增的数据包
-    for n in node:
-        # print("node:",n.mac)
-        e_in = Event_monitor(super_node, n)  # 看上去好像是超级节点发给节点n的
-        e_out = Event_monitor(n, super_node)  # 看上去好像是超级节点发给节点n的
-        n.in_event_monitor.append(e_in)
-        n.out_event_monitor.append(e_out)
-        net_1 = find_net(n, SUBNET_LIST)  # 判断节点属于哪个子网
-        net_1.incoming_event_monitor.append(e_in)
-        net_1.outcoming_event_monitor.append(e_out)
-        for neighbor in n.neighbor:
-            e1 = Event_monitor(n, neighbor)  # 生成事件监视器
-            e2 = Event_monitor(neighbor, n)
-            # print("node:",n,"neighbor:",neighbor)
-            #对于节点n来说，e1属于发送事件监视器，e2属于接收事件监视器
-            #这里是对每个节点进行检测
-            n.out_event_monitor.append(e1)
-            n.in_event_monitor.append(e2)
-            # net = find_net(n, SUBNET_LIST)  # 判断节点属于哪个子网
-            net_1 = find_net(n, SUBNET_LIST)  # 判断节点属于哪个子网
-            net_2 = find_net(neighbor, SUBNET_LIST)  # 判断节点的邻居属于哪个子网
-            if net_1.type.value != net_2.type.value:  # 说明不是子网内部
-                net_1.outcoming_event_monitor.append(e1)
-                net_1.incoming_event_monitor.append(e2)
-            # print("node:",n,"neighbor:",neighbor)
-            #这里是对子网的事件监视器进行初始化
-            # net_1 = find_net(n, SUBNET_LIST)  # 判断节点属于哪个子网
-            # net_2 = find_net(neighbor, SUBNET_LIST)  # 判断节点的邻居属于哪个子网
-            # if net_1.type == net_2.type:  # 说明是子网内部
-            #     #这里子网内部的监视器先不考虑
-            #     if not find_e_subnet(e1, net_1):  # 如果子网内部还没有该事件
-            #         net_1.internal_event_monitor.append(e1)
-            #     if not find_e_subnet(e2, net_1):
-            #         net_1.internal_event_monitor.append(e2)
-            # else:
-            #     if not find_e_subnet(e1, net_1):
-            #         net_1.outcoming_event_monitor.append(e1)
-            #     if not find_e_subnet(e1, net_2):
-            #         net_2.incoming_event_monitor.append(e1)
-            #     if not find_e_subnet(e2, net_1):
-            #         net_1.incoming_event_monitor.append(e2)
-            #     if not find_e_subnet(e2, net_2):
-            #         net_2.outcoming_event_monitor.append(e2)
     return G, SUBNET_LIST  # 返回拓扑图和子网列表
 
 

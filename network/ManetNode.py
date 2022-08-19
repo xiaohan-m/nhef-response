@@ -30,13 +30,8 @@ class ManetNode(object):
         self.mac = mac  #节点的id
         self.type = type  # 节点种节点身份类（属于哪家公司）
         self.route_table = dict()
-        self.in_event_monitor = list() #每个节点需要维护的接收事件监视器列表
-        self.out_event_monitor = list()#每个节点需要维护的发送事件监视器列表
-        self.statistical_data = [0,0,0] #[a,b.c]用于最后计算节点的概率
-        self.probability = 0 #节点的估计概率
         self.position = list() #节点的坐标
         self.color_value = (0,0,1) #节点的颜色
-        self.basic_lossrate = 0 #节点基础的丢包率
 
         self.neighbor = list()  # 节点维护的邻居列表
         self.send_message_pool = list()  # 节点自己需要发送的消息池
@@ -58,7 +53,7 @@ class ManetNode(object):
     def clear(self):
         self.send_message_pool = list()  # 节点自己需要发送的消息池
         self.buffer_message_pool = list()  # 节点的缓存池，暂时保存从别的节点那里接收到的消息
-        #self.transport_message_pool = list()  # 从缓存池中拿出来的需要立即转发的消息
+        self.transport_message_pool = list()  # 从缓存池中拿出来的需要立即转发的消息
         self.receive_message_pool = list()  # 用来接收发送给自己的消息
 
         self.qs_buffer_message_pool = set()  # 用来快速进行查找
@@ -66,13 +61,7 @@ class ManetNode(object):
         self.qs_receive_message_pool = set()
         self.qs_transport_message_pool = set()
 
-        self.statistical_data = [0, 0, 0]  # [a,b.c]用于最后计算节点的概率
-        self.probability = 0  # 节点的估计概率
 
-        for e in self.in_event_monitor:
-            e.message_pool = list()
-        for e in self.out_event_monitor:
-            e.message_pool = list()
 
     # 节点转发消息（Broker）
     def transport_message(self):
