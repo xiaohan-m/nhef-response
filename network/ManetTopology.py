@@ -43,7 +43,7 @@ def manet_generator():  # 不考虑节点的移动性，固定拓扑
     G_temp = nx.Graph()
     G = nx.Graph()
     node = []
-    with open('拓扑文件/as19990829.txt', 'r', encoding='utf-8') as f:
+    with open('../拓扑文件/as19990829.txt', 'r', encoding='utf-8') as f:
         for line in f.readlines():
             line = line.strip('\n')  # 去掉列表中每一个元素的换行符
             temp_list = re.split(r'\s+', line)

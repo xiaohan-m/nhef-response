@@ -5,10 +5,13 @@
 """
 考虑错误转发路径
 """
+import math
 from datetime import datetime
 import random
 import simpy
 import xlsxwriter
+
+from DataIndex import DataIndex
 from network.ManetTopology import manet_generator, find_net, find_e_subnet, find_e_node
 from network.Package import Package
 
@@ -16,15 +19,15 @@ from network.Package import Package
 from network.Stream import Stream
 
 PACKAGE_ID = 1  # 用来记录数据包的编号
-TRAFFIC_LOAD = 0.5  # 系统强度(每个时隙产生正常数据包的概率)
+TRAFFIC_LOAD = 1  # 系统强度(每个时隙产生正常数据包的概率)
 SLOT_NUM = 20000
 
 SEND_STREAM_POOL = list()
 RECEIVE_STREAM_POOL = list()
 COMPLETE_RECEIVE_STREAM_POOL = list()
 STREAM_ID = 1
-STREAM_SIZE = 5
-PACKAGE_LOSS_RATE = 0.1
+STREAM_SIZE = 10
+PACKAGE_LOSS_RATE = 0.0001
 
 
 def sim_run(env, node_list, wrongPathRate):
@@ -33,7 +36,7 @@ def sim_run(env, node_list, wrongPathRate):
     while True:
         if env.now % 10000 == 0:
             print('当前仿真间隙：', env.now)
-        if env.now == SLOT_NUM:
+        if len(COMPLETE_RECEIVE_STREAM_POOL) >= 5000:
             # print('当前仿真间隙：', env.now, "当前检测概率：", dp, "当前节点恶意程度:", mp)
             break
         generate_message(node_list)
@@ -165,40 +168,50 @@ def receiving_package(node_list, tran_results,wrongPathRate):
 
 
 
-def clear_net(node, SUBNET_LIST):
-    for n in node:
-        n.clear()
-    for net in SUBNET_LIST:
-        net.clear_event()
+def clear_net(node_list):
+    global SEND_STREAM_POOL, RECEIVE_STREAM_POOL, COMPLETE_RECEIVE_STREAM_POOL
+    for node in node_list:
+        node.clear()
+    SEND_STREAM_POOL = list()
+    RECEIVE_STREAM_POOL = list()
+    COMPLETE_RECEIVE_STREAM_POOL = list()
 
 
 # 对于每个检测概率：考虑采取不同的产生错误数据包的概率（恶意程度）
 # 衡量在不同的恶意程度下，检测成功率
 
-def output_data(detection_p, malicious_p, Detection_success_rate):
+def output_data(dataIndexList):
     global SLOT_NUM, ROUND_NUM
     now = datetime.now()
     s1 = now.strftime("%Y_%m%d_%H%M")
-    workbook = xlsxwriter.Workbook('.\data record\Figure_1_data_record\数据统计%s.xlsx' % s1, {'nan_inf_to_errors': True})
+    workbook = xlsxwriter.Workbook('..\data_record\错误转发路径\自然丢包率\数据统计_lossRate_%s_%s.xlsx' % (PACKAGE_LOSS_RATE,s1), {'nan_inf_to_errors': True})
     worksheet1 = workbook.add_worksheet('data_record')
     worksheet1.write(0, 0, "恶意程度")
-    i = 0
-    while i < len(malicious_p):
-        worksheet1.write(i + 1, 0, malicious_p[i])
-        i += 1
-    j = 0
-    while j < len(detection_p):
-        worksheet1.write(0, j + 1, "检测成功率（检测概率为：%s)" % detection_p[j])
-        k = 0
-        while k < len(Detection_success_rate[j]):
-            worksheet1.write(k + 1, j + 1, Detection_success_rate[j][k])
-            k += 1
-        j += 1
-    worksheet1.write(i + 1, 0, "Slot_num:%s" % SLOT_NUM)
-    worksheet1.write(i + 2, 0, "Round_num:%s" % ROUND_NUM)
-    worksheet1.write(i + 3, 0, "Topology:103个节点8个子网")
-    workbook.close()
+    worksheet1.write(0, 1, "green2green")
+    worksheet1.write(0, 2, "green2red")
+    worksheet1.write(0, 3, "red2green")
+    worksheet1.write(0, 4, "red2red")
+    worksheet1.write(0, 5, "统计的流的数量")
+    worksheet1.write(0, 6, "Jaccard指数")
+    worksheet1.write(0, 7, "FM指数")
+    worksheet1.write(0, 8, "Rand index")
 
+    i = 0
+    while i < len(dataIndexList):
+        worksheet1.write(i + 1, 0,dataIndexList[i].mp)
+        worksheet1.write(i + 1, 1,dataIndexList[i].green2green)
+        worksheet1.write(i + 1, 2,dataIndexList[i].green2red)
+        worksheet1.write(i + 1, 3,dataIndexList[i].red2green)
+        worksheet1.write(i + 1, 4,dataIndexList[i].red2red)
+        worksheet1.write(i + 1, 5,dataIndexList[i].size)
+        worksheet1.write(i + 1, 6,dataIndexList[i].jaccard)
+        worksheet1.write(i + 1, 7,dataIndexList[i].fm)
+        worksheet1.write(i + 1, 8,dataIndexList[i].randIndex)
+        i += 1
+    worksheet1.write(i + 1, 0, "数据流中数据包的个数:%s" % STREAM_SIZE)
+    worksheet1.write(i + 2, 0, "自然丢包率:%s" % PACKAGE_LOSS_RATE)
+    worksheet1.write(i + 3, 0, "系统强度:%s"%TRAFFIC_LOAD)
+    workbook.close()
 
 if __name__ == '__main__':
     # 考虑几件事情
@@ -208,15 +221,55 @@ if __name__ == '__main__':
     # 在中间转发的时候被丢包，恶意新增的数据包，被篡改路径的数据包
     # 代码逻辑
     G, SUBNET_LIST = manet_generator()
-    node = list(G.nodes())
+    node_list = list(G.nodes())
     in_detection_p = 1
     out_detection_p = 1
-    env = simpy.Environment()
-    wrongPathRate = 0.001
-    env.process(sim_run(env, node, wrongPathRate))
-    env.run()
-    for stream in COMPLETE_RECEIVE_STREAM_POOL:
-        # for package in stream.package_list:
-        #     if package.wrong_path_status == 1 and package.loss_status == 1:
-        if(len(stream.package_list)<5):
-            print(len(stream.package_list))
+    malicious_p = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
+    # malicious_p = [0.001]
+    dataIndexList = list()
+    for mp in malicious_p:
+        env = simpy.Environment()
+        env.process(sim_run(env, node_list, mp))
+        env.run()
+        stream_type_green2green = 0
+        stream_type_green2red = 0
+        stream_type_red2green = 0
+        stream_type_red2red = 0
+        for stream in COMPLETE_RECEIVE_STREAM_POOL:
+            only_nature_loss_package_num = 0;
+            wrong_path_and_loss_package_num = 0;
+            only_wrong_path_package_num = 0;
+            no_wrong_path_no_loss_package_num = 0;
+            for package in stream.package_list:
+                if package.wrong_path_status == 1 and package.loss_status == 1:
+                    wrong_path_and_loss_package_num += 1
+                if package.wrong_path_status == -1 and package.loss_status == 1:
+                    only_nature_loss_package_num += 1
+                if package.wrong_path_status == 1 and package.loss_status == -1:
+                    only_wrong_path_package_num += 1
+                if package.new_add_status == -1 and package.loss_status == -1:
+                    no_wrong_path_no_loss_package_num += 1
+            if only_wrong_path_package_num > 0:
+                stream_type_red2red += 1
+                continue
+            if only_wrong_path_package_num != 0:
+                print("只有新增竟然不等于0")
+            elif only_nature_loss_package_num == 0 and wrong_path_and_loss_package_num == 0:
+                stream_type_green2green += 1
+            elif only_nature_loss_package_num > 0 or wrong_path_and_loss_package_num > 0:
+                stream_type_red2red += 1
+            elif only_nature_loss_package_num > 0 and wrong_path_and_loss_package_num == 0:
+                stream_type_green2red += 1
+        dataIndex = DataIndex(mp,stream_type_green2green,stream_type_green2red,stream_type_red2green,stream_type_red2red,len(COMPLETE_RECEIVE_STREAM_POOL))
+        # 计算那三个指标
+        TP = dataIndex.red2red #真阳性的数量
+        FP = dataIndex.green2red #假阳性
+        FN = dataIndex.red2green #假阴性的数量
+        TN = dataIndex.green2green #真阴性的数量
+        dataIndex.jaccard = TP / (TP+FP+FN)
+        dataIndex.fm =math.sqrt((TP/(TP+FP))*(TP/TP+FN))
+        dataIndex.randIndex = (TP+TN)/(TP+FP+FN+TN)
+        dataIndexList.append(dataIndex)
+        clear_net(node_list)
+    # 这里就可以调用数据统计函数了去写文件
+    output_data(dataIndexList)
