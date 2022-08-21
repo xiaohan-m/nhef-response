@@ -27,7 +27,7 @@ RECEIVE_STREAM_POOL = list()
 COMPLETE_RECEIVE_STREAM_POOL = list()
 STREAM_ID = 1
 STREAM_SIZE = 5
-PACKAGE_LOSS_RATE = 0.001
+PACKAGE_LOSS_RATE = 0.0005
 
 
 def sim_run(env, node_list, wrongPathRate):
@@ -45,7 +45,7 @@ def sim_run(env, node_list, wrongPathRate):
         tran_results = transmission_package(node_list)
         yield env.timeout(1)
         # 下一个时隙完成消息接收
-        receiving_package(node_list, tran_results,wrongPathRate)
+        receiving_package(node_list, tran_results, wrongPathRate)
 
 
 # 根据系统强度生成正常数据包
@@ -110,7 +110,6 @@ def generate_send_stream(package):
     STREAM_ID += 1
 
 
-
 # 产生流
 def generate_receive_stream(package):
     # 首先判断是否需要新建流
@@ -136,7 +135,7 @@ def transmission_package(node):
 
 
 # 完成消息的接收
-def receiving_package(node_list, tran_results,wrongPathRate):
+def receiving_package(node_list, tran_results, wrongPathRate):
     global PACKAGE_LOSS_RATE
     k = 0
     while k < len(tran_results):
@@ -167,7 +166,6 @@ def receiving_package(node_list, tran_results,wrongPathRate):
             k += 1
 
 
-
 def clear_net(node_list):
     global SEND_STREAM_POOL, RECEIVE_STREAM_POOL, COMPLETE_RECEIVE_STREAM_POOL
     for node in node_list:
@@ -184,7 +182,8 @@ def output_data(dataIndexList):
     global SLOT_NUM, ROUND_NUM
     now = datetime.now()
     s1 = now.strftime("%Y_%m%d_%H%M")
-    workbook = xlsxwriter.Workbook('..\data_record\错误转发路径\流中包的数量\数据统计_streamSize_%s_%s.xlsx' % (STREAM_SIZE,s1), {'nan_inf_to_errors': True})
+    workbook = xlsxwriter.Workbook('..\data_record\错误转发路径\流中包的数量\数据统计_streamSize_%s_%s.xlsx' % (STREAM_SIZE, s1),
+                                   {'nan_inf_to_errors': True})
     worksheet1 = workbook.add_worksheet('data_record')
     worksheet1.write(0, 0, "恶意程度")
     worksheet1.write(0, 1, "green2green")
@@ -198,20 +197,21 @@ def output_data(dataIndexList):
 
     i = 0
     while i < len(dataIndexList):
-        worksheet1.write(i + 1, 0,dataIndexList[i].mp)
-        worksheet1.write(i + 1, 1,dataIndexList[i].green2green)
-        worksheet1.write(i + 1, 2,dataIndexList[i].green2red)
-        worksheet1.write(i + 1, 3,dataIndexList[i].red2green)
-        worksheet1.write(i + 1, 4,dataIndexList[i].red2red)
-        worksheet1.write(i + 1, 5,dataIndexList[i].size)
-        worksheet1.write(i + 1, 6,dataIndexList[i].jaccard)
-        worksheet1.write(i + 1, 7,dataIndexList[i].fm)
-        worksheet1.write(i + 1, 8,dataIndexList[i].randIndex)
+        worksheet1.write(i + 1, 0, dataIndexList[i].mp)
+        worksheet1.write(i + 1, 1, dataIndexList[i].green2green)
+        worksheet1.write(i + 1, 2, dataIndexList[i].green2red)
+        worksheet1.write(i + 1, 3, dataIndexList[i].red2green)
+        worksheet1.write(i + 1, 4, dataIndexList[i].red2red)
+        worksheet1.write(i + 1, 5, dataIndexList[i].size)
+        worksheet1.write(i + 1, 6, dataIndexList[i].jaccard)
+        worksheet1.write(i + 1, 7, dataIndexList[i].fm)
+        worksheet1.write(i + 1, 8, dataIndexList[i].randIndex)
         i += 1
     worksheet1.write(i + 1, 0, "数据流中数据包的个数:%s" % STREAM_SIZE)
     worksheet1.write(i + 2, 0, "自然丢包率:%s" % PACKAGE_LOSS_RATE)
-    worksheet1.write(i + 3, 0, "系统强度:%s"%TRAFFIC_LOAD)
+    worksheet1.write(i + 3, 0, "系统强度:%s" % TRAFFIC_LOAD)
     workbook.close()
+
 
 if __name__ == '__main__':
     # 考虑几件事情
@@ -224,7 +224,7 @@ if __name__ == '__main__':
     node_list = list(G.nodes())
     in_detection_p = 1
     out_detection_p = 1
-    malicious_p = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
+    malicious_p = [0.0001, 0.001, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
     # malicious_p = [0.001]
     dataIndexList = list()
     for mp in malicious_p:
@@ -236,10 +236,10 @@ if __name__ == '__main__':
         stream_type_red2green = 0
         stream_type_red2red = 0
         for stream in COMPLETE_RECEIVE_STREAM_POOL:
-            only_nature_loss_package_num = 0;
-            wrong_path_and_loss_package_num = 0;
-            only_wrong_path_package_num = 0;
-            no_wrong_path_no_loss_package_num = 0;
+            only_nature_loss_package_num = 0
+            wrong_path_and_loss_package_num = 0
+            only_wrong_path_package_num = 0
+            no_wrong_path_no_loss_package_num = 0
             for package in stream.package_list:
                 if package.wrong_path_status == 1 and package.loss_status == 1:
                     wrong_path_and_loss_package_num += 1
@@ -252,23 +252,25 @@ if __name__ == '__main__':
             if only_wrong_path_package_num > 0:
                 stream_type_red2red += 1
                 continue
-            if only_wrong_path_package_num != 0:
-                print("只有新增竟然不等于0")
-            elif only_nature_loss_package_num == 0 and wrong_path_and_loss_package_num == 0:
-                stream_type_green2green += 1
-            elif only_nature_loss_package_num > 0 or wrong_path_and_loss_package_num > 0:
-                stream_type_red2red += 1
-            elif only_nature_loss_package_num > 0 and wrong_path_and_loss_package_num == 0:
+            if only_nature_loss_package_num > 0 and wrong_path_and_loss_package_num == 0:
                 stream_type_green2red += 1
-        dataIndex = DataIndex(mp,stream_type_green2green,stream_type_green2red,stream_type_red2green,stream_type_red2red,len(COMPLETE_RECEIVE_STREAM_POOL))
+                continue
+            if only_nature_loss_package_num == 0 and wrong_path_and_loss_package_num == 0:
+                stream_type_green2green += 1
+                continue
+            if only_nature_loss_package_num > 0 and wrong_path_and_loss_package_num > 0:
+                stream_type_red2red += 1
+        dataIndex = DataIndex(mp, stream_type_green2green, stream_type_green2red, stream_type_red2green,
+                              stream_type_red2red, len(COMPLETE_RECEIVE_STREAM_POOL))
         # 计算那三个指标
-        TP = dataIndex.red2red #真阳性的数量
-        FP = dataIndex.green2red #假阳性
-        FN = dataIndex.red2green #假阴性的数量
-        TN = dataIndex.green2green #真阴性的数量
-        dataIndex.jaccard = TP / (TP+FP+FN)
-        dataIndex.fm =math.sqrt((TP/(TP+FP))*(TP/TP+FN))
-        dataIndex.randIndex = (TP+TN)/(TP+FP+FN+TN)
+        TP = dataIndex.red2red  # 真阳性的数量
+        FP = dataIndex.green2red  # 假阳性
+        FN = dataIndex.red2green  # 假阴性的数量
+        TN = dataIndex.green2green  # 真阴性的数量
+        if TP != 0:
+            dataIndex.jaccard = TP / (TP + FP + FN)
+            dataIndex.fm = math.sqrt((TP / (TP + FP)) * (TP / (TP + FN)))
+            dataIndex.randIndex = (TP + TN) / (TP + FP + FN + TN)
         dataIndexList.append(dataIndex)
         clear_net(node_list)
     # 这里就可以调用数据统计函数了去写文件

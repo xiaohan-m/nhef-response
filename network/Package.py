@@ -23,7 +23,7 @@ class Package:
         self.flag = True
 
     def __str__(self):
-        return 'id:%s' % self.id + '\tcaller_id:%s' % self.caller_id+'\treceiver_id:%s'%self.receiver_id + '\tstream_id:%s' % self.stream_id + '\tloss_status:%s' % self.loss_status + '\twrong_path_status:%s' % self.wrong_path_status
+        return 'id:%s' % self.id + '\tcaller_id:%s' % self.caller_id+'\treceiver_id:%s'%self.receiver_id + '\tstream_id:%s' % self.stream_id + '\tloss_status:%s' % self.loss_status + '\twrong_path_status:%s' % self.wrong_path_status + '\tnew_add_status:%s' % self.new_add_status
         # return 'id:%s' % self._id + '\tsend_node:%s' % self._head[0] + '\treceiver_node:%s' % self._head[
         #     1]+'\tflag:%s' % self.flag
 

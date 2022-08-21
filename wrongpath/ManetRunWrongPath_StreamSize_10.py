@@ -27,7 +27,7 @@ RECEIVE_STREAM_POOL = list()
 COMPLETE_RECEIVE_STREAM_POOL = list()
 STREAM_ID = 1
 STREAM_SIZE = 10
-PACKAGE_LOSS_RATE = 0.001
+PACKAGE_LOSS_RATE = 0.0005
 
 
 def sim_run(env, node_list, wrongPathRate):
@@ -224,7 +224,7 @@ if __name__ == '__main__':
     node_list = list(G.nodes())
     in_detection_p = 1
     out_detection_p = 1
-    malicious_p = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
+    malicious_p = [0.0001,0.001,0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
     # malicious_p = [0.001]
     dataIndexList = list()
     for mp in malicious_p:
@@ -236,10 +236,10 @@ if __name__ == '__main__':
         stream_type_red2green = 0
         stream_type_red2red = 0
         for stream in COMPLETE_RECEIVE_STREAM_POOL:
-            only_nature_loss_package_num = 0;
-            wrong_path_and_loss_package_num = 0;
-            only_wrong_path_package_num = 0;
-            no_wrong_path_no_loss_package_num = 0;
+            only_nature_loss_package_num = 0
+            wrong_path_and_loss_package_num = 0
+            only_wrong_path_package_num = 0
+            no_wrong_path_no_loss_package_num = 0
             for package in stream.package_list:
                 if package.wrong_path_status == 1 and package.loss_status == 1:
                     wrong_path_and_loss_package_num += 1
@@ -252,23 +252,24 @@ if __name__ == '__main__':
             if only_wrong_path_package_num > 0:
                 stream_type_red2red += 1
                 continue
-            if only_wrong_path_package_num != 0:
-                print("只有新增竟然不等于0")
-            elif only_nature_loss_package_num == 0 and wrong_path_and_loss_package_num == 0:
-                stream_type_green2green += 1
-            elif only_nature_loss_package_num > 0 or wrong_path_and_loss_package_num > 0:
-                stream_type_red2red += 1
-            elif only_nature_loss_package_num > 0 and wrong_path_and_loss_package_num == 0:
+            if only_nature_loss_package_num > 0 and wrong_path_and_loss_package_num == 0:
                 stream_type_green2red += 1
+                continue
+            if only_nature_loss_package_num == 0 and wrong_path_and_loss_package_num == 0:
+                stream_type_green2green += 1
+                continue
+            if only_nature_loss_package_num > 0 and wrong_path_and_loss_package_num > 0:
+                stream_type_red2red += 1
         dataIndex = DataIndex(mp,stream_type_green2green,stream_type_green2red,stream_type_red2green,stream_type_red2red,len(COMPLETE_RECEIVE_STREAM_POOL))
         # 计算那三个指标
         TP = dataIndex.red2red #真阳性的数量
         FP = dataIndex.green2red #假阳性
         FN = dataIndex.red2green #假阴性的数量
         TN = dataIndex.green2green #真阴性的数量
-        dataIndex.jaccard = TP / (TP+FP+FN)
-        dataIndex.fm =math.sqrt((TP/(TP+FP))*(TP/TP+FN))
-        dataIndex.randIndex = (TP+TN)/(TP+FP+FN+TN)
+        if TP != 0:
+            dataIndex.jaccard = TP / (TP+FP+FN)
+            dataIndex.fm =math.sqrt((TP/(TP+FP))*(TP/(TP+FN)))
+            dataIndex.randIndex = (TP+TN)/(TP+FP+FN+TN)
         dataIndexList.append(dataIndex)
         clear_net(node_list)
     # 这里就可以调用数据统计函数了去写文件

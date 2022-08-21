@@ -30,7 +30,7 @@ RECEIVE_STREAM_POOL = list()
 COMPLETE_RECEIVE_STREAM_POOL = list()
 STREAM_ID = 1
 STREAM_SIZE = 10
-PACKAGE_LOSS_RATE = 0.001
+PACKAGE_LOSS_RATE = 0.0005
 
 
 def sim_run(env, node_list, SUBNET_LIST, in_detection_p, out_detection_p, mp):
@@ -195,22 +195,22 @@ def generate_leaked_packet(node_list, SUBNET_LIST, mp):
     t = random.random()
     # 以概率mp产生一个新的消息(考虑p<=1)
     if t <= mp:
-        C = random.randint(0, len(SUBNET_LIST[0].node_list) - 1)
+        C = random.randint(0, len(node_list) - 1)
         while True:
             R = random.randint(0, len(node_list) - 1)
-            if node_list[R].type.value == SUBNET_LIST[0].node_list[C].type.value:
+            if R == C:
                 continue
             else:
                 break
         # 随机选择了子网1中的一个节点，与其它任意一个非子网1中的节点
         # 产生一个新的数据包裹，并对包裹进行初始化
-        new_package = Package(id=PACKAGE_ID, caller_id=SUBNET_LIST[0].node_list[C].mac,
+        new_package = Package(id=PACKAGE_ID, caller_id=node_list[C].mac,
                               receiver_id=node_list[R].mac)  # 数据包(数据包编号，发送节点id，接收节点id)
         # 表面这是恶意新增的数据包
         new_package.new_add_status = 1
 
         # 将数据包放入发送缓存池,考虑优先发送恶意新增，所以选择头部插入
-        SUBNET_LIST[0].node_list[C].buffer_message_pool.insert(0, new_package)
+        node_list[C].buffer_message_pool.insert(0, new_package)
         generate_new_add_stream(new_package)
         PACKAGE_ID += 1
 
@@ -272,7 +272,7 @@ if __name__ == '__main__':
     node_list = list(G.nodes())
     in_detection_p = 1
     out_detection_p = 1
-    malicious_p = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
+    malicious_p = [0.0001,0.001,0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
     dataIndexList = list()
     for mp in malicious_p:
         env = simpy.Environment()
@@ -283,10 +283,10 @@ if __name__ == '__main__':
         stream_type_red2green = 0
         stream_type_red2red = 0
         for stream in COMPLETE_RECEIVE_STREAM_POOL:
-            only_nature_loss_package_num = 0;
-            new_add_and_loss_package_num = 0;
-            only_new_add_package_num = 0;
-            no_new_add_no_loss_package_num = 0;
+            only_nature_loss_package_num = 0
+            new_add_and_loss_package_num = 0
+            only_new_add_package_num = 0
+            no_new_add_no_loss_package_num = 0
             for package in stream.package_list:
                 if package.new_add_status == 1 and package.loss_status == 1:
                     new_add_and_loss_package_num += 1
@@ -299,24 +299,27 @@ if __name__ == '__main__':
             if only_new_add_package_num > 0:
                 stream_type_red2red += 1
                 continue
-            if only_new_add_package_num != 0:
-                print("只有新增竟然不等于0")
             if only_nature_loss_package_num == 0 and new_add_and_loss_package_num > 0:
                 stream_type_red2green += 1
-            elif only_nature_loss_package_num == 0 and new_add_and_loss_package_num == 0:
+                continue
+            if only_nature_loss_package_num == 0 and new_add_and_loss_package_num == 0:
                 stream_type_green2green += 1
-            elif only_nature_loss_package_num > 0 and new_add_and_loss_package_num > 0:
+                continue
+            if only_nature_loss_package_num > 0 and new_add_and_loss_package_num > 0:
                 stream_type_red2red += 1
-            elif only_nature_loss_package_num > 0 and new_add_and_loss_package_num == 0:
+                continue
+            if only_nature_loss_package_num > 0 and new_add_and_loss_package_num == 0:
                 stream_type_green2red += 1
+                continue
         dataIndex = DataIndex(mp,stream_type_green2green,stream_type_green2red,stream_type_red2green,stream_type_red2red,len(COMPLETE_RECEIVE_STREAM_POOL))
         TP = dataIndex.red2red  # 真阳性的数量
         FP = dataIndex.green2red  # 假阳性
         FN = dataIndex.red2green  # 假阴性的数量
         TN = dataIndex.green2green  # 真阴性的数量
-        dataIndex.jaccard = TP / (TP + FP + FN)
-        dataIndex.fm = math.sqrt((TP / (TP + FP)) * (TP / TP + FN))
-        dataIndex.randIndex = (TP + TN) / (TP + FP + FN + TN)
+        if TP != 0:
+            dataIndex.jaccard = TP / (TP + FP + FN)
+            dataIndex.fm = math.sqrt((TP / (TP + FP)) * (TP / (TP + FN)))
+            dataIndex.randIndex = (TP + TN) / (TP + FP + FN + TN)
         dataIndexList.append(dataIndex)
         clear_net(node_list)
     # 这里就可以调用数据统计函数了去写文件

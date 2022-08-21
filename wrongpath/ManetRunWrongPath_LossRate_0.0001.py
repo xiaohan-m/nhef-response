@@ -224,7 +224,7 @@ if __name__ == '__main__':
     node_list = list(G.nodes())
     in_detection_p = 1
     out_detection_p = 1
-    malicious_p = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
+    malicious_p = [0.0001,0.001,0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
     # malicious_p = [0.001]
     dataIndexList = list()
     for mp in malicious_p:
@@ -252,23 +252,24 @@ if __name__ == '__main__':
             if only_wrong_path_package_num > 0:
                 stream_type_red2red += 1
                 continue
-            if only_wrong_path_package_num != 0:
-                print("只有新增竟然不等于0")
-            elif only_nature_loss_package_num == 0 and wrong_path_and_loss_package_num == 0:
-                stream_type_green2green += 1
-            elif only_nature_loss_package_num > 0 or wrong_path_and_loss_package_num > 0:
-                stream_type_red2red += 1
-            elif only_nature_loss_package_num > 0 and wrong_path_and_loss_package_num == 0:
+            if only_nature_loss_package_num > 0 and wrong_path_and_loss_package_num == 0:
                 stream_type_green2red += 1
+                continue
+            if only_nature_loss_package_num == 0 and wrong_path_and_loss_package_num == 0:
+                stream_type_green2green += 1
+                continue
+            if only_nature_loss_package_num > 0 and wrong_path_and_loss_package_num > 0:
+                stream_type_red2red += 1
         dataIndex = DataIndex(mp,stream_type_green2green,stream_type_green2red,stream_type_red2green,stream_type_red2red,len(COMPLETE_RECEIVE_STREAM_POOL))
         # 计算那三个指标
         TP = dataIndex.red2red #真阳性的数量
         FP = dataIndex.green2red #假阳性
         FN = dataIndex.red2green #假阴性的数量
         TN = dataIndex.green2green #真阴性的数量
-        dataIndex.jaccard = TP / (TP+FP+FN)
-        dataIndex.fm =math.sqrt((TP/(TP+FP))*(TP/TP+FN))
-        dataIndex.randIndex = (TP+TN)/(TP+FP+FN+TN)
+        if TP != 0:
+            dataIndex.jaccard = TP / (TP+FP+FN)
+            dataIndex.fm =math.sqrt((TP/(TP+FP))*(TP/(TP+FN)))
+            dataIndex.randIndex = (TP+TN)/(TP+FP+FN+TN)
         dataIndexList.append(dataIndex)
         clear_net(node_list)
     # 这里就可以调用数据统计函数了去写文件
