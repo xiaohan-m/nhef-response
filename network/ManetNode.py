@@ -44,6 +44,14 @@ class ManetNode(object):
         self.qs_receive_message_pool = set()
         self.qs_transport_message_pool = set()
 
+        self.send_stream_pool = list()
+        self.full_send_stream_pool = list()
+        self.receive_stream_pool = list()
+        self.full_receive_stream_pool = list()
+
+        self.jaccard = 0
+        self.fm = 0
+        self.randIndex = 0
 
     def __str__(self):
         return '%s' % self.mac

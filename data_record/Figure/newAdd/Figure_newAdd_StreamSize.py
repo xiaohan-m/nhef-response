@@ -173,13 +173,13 @@ if __name__ == '__main__':
     }  # mac字体不一样   Songti SC  windows Simsun
     rcParams.update(config)
 
-    df1 = pandas.read_excel(r'../../新增数据包/流中包的数量/数据统计_streamSize_5_2022_0821_2232.xlsx')
+    df1 = pandas.read_excel(r'../../新增数据包/流中包的数量/数据统计_streamSize_10_2022_0821_2312.xlsx')
     data1 = np.array(df1)
 
-    df2 = pandas.read_excel(r'../../新增数据包/流中包的数量/数据统计_streamSize_10_2022_0821_2312.xlsx')
+    df2 = pandas.read_excel(r'../../新增数据包/流中包的数量/数据统计_streamSize_50_2022_0826_0008.xlsx')
     data2 = np.array(df2)
 
-    df3 = pandas.read_excel(r'../../新增数据包/流中包的数量/数据统计_streamSize_20_2022_0821_2347.xlsx')
+    df3 = pandas.read_excel(r'../../新增数据包/流中包的数量/数据统计_streamSize_100_2022_0826_0336.xlsx')
     data3 = np.array(df3)
 
     x_array1 = data1[:, 0][0:12]
@@ -208,13 +208,13 @@ if __name__ == '__main__':
     plt.rcParams['font.sans-serif'] = 'SimSun'
     plt.plot(x_array1, y_Jaccard1, 'o', linewidth=1.5, color="firebrick", linestyle="-", markerfacecolor='white',
              markersize=5,
-             markeredgecolor='firebrick', label='StreamSize:5')
+             markeredgecolor='firebrick', label='StreamSize:10')
     plt.plot(x_array2, y_Jaccard2, 's', linewidth=1.5, color="firebrick", linestyle="-", markerfacecolor='white',
              markersize=5,
-             markeredgecolor='firebrick', label='StreamSize:10')
+             markeredgecolor='firebrick', label='StreamSize:50')
     plt.plot(x_array3, y_Jaccard3, '^', linewidth=1.5, color="firebrick", linestyle="-", markerfacecolor='white',
              markersize=5,
-             markeredgecolor='firebrick', label='StreamSize:20')
+             markeredgecolor='firebrick', label='StreamSize:100')
     # plt.legend(loc='lower right')
     plt.ylim(0, 1.0)
     # plt.ylabel('Jaccard')
@@ -226,18 +226,18 @@ if __name__ == '__main__':
     # ax2.spines['right'].set_visible(False)  # 去掉右边框
     plt.plot(x_array1, y_RandIndex1, 'o', linewidth=1.2, color="g", linestyle="--", markerfacecolor='white',
              markersize=5,
-             markeredgecolor='g', label='StreamSize:5')
+             markeredgecolor='g', label='StreamSize:10')
     plt.plot(x_array2, y_RandIndex2, 's', linewidth=1.2, color="g", linestyle="--", markerfacecolor='white',
              markersize=5,
-             markeredgecolor='g', label='StreamSize:10')
+             markeredgecolor='g', label='StreamSize:50')
     plt.plot(x_array3, y_RandIndex3, '^', linewidth=1.2, color="g", linestyle="--", markerfacecolor='white',
              markersize=5,
-             markeredgecolor='g', label='StreamSize:20')
+             markeredgecolor='g', label='StreamSize:100')
     # plt.legend(loc=[0.7,0.05])
     plt.ylim(0, 1.0)
     # plt.ylabel('Rand Index')
     # ax1.set_xlabel("X1", color=c1, fontsize=fontsize)
-    ax1.set_ylabel("Jaccard", color="firebrick", fontsize=20)
+    ax1.set_ylabel("Threat Score", color="firebrick", fontsize=20)
     # ax2.set_xlabel('X2', color=c2, fontsize=fontsize)
     ax2.set_ylabel('Rand Index', color="g", fontsize=20)
     # ax2.set_xlabel('attributes', fontsize=15)

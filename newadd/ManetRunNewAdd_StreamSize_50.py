@@ -29,7 +29,7 @@ SEND_STREAM_POOL = list()
 RECEIVE_STREAM_POOL = list()
 COMPLETE_RECEIVE_STREAM_POOL = list()
 STREAM_ID = 1
-STREAM_SIZE = 10
+STREAM_SIZE = 50
 PACKAGE_LOSS_RATE = 0.0005
 
 
@@ -39,7 +39,7 @@ def sim_run(env, node_list, SUBNET_LIST, in_detection_p, out_detection_p, mp):
     while True:
         if env.now % 10000 == 0:
             print('当前仿真间隙：', env.now)
-        if len(COMPLETE_RECEIVE_STREAM_POOL) >= 500:
+        if len(COMPLETE_RECEIVE_STREAM_POOL) >= 1000:
             # print('当前仿真间隙：', env.now, "当前检测概率：", dp, "当前节点恶意程度:", mp)
             break
         generate_message(node_list, in_detection_p)
@@ -231,7 +231,7 @@ def output_data(dataIndexList):
     global SLOT_NUM, ROUND_NUM
     now = datetime.now()
     s1 = now.strftime("%Y_%m%d_%H%M")
-    workbook = xlsxwriter.Workbook('..\data_record\新增数据包\是否稳定\数据统计_lossRate_%s_%s.xlsx' % (PACKAGE_LOSS_RATE,s1), {'nan_inf_to_errors': True})
+    workbook = xlsxwriter.Workbook('..\data_record\新增数据包\流中包的数量\数据统计_streamSize_%s_%s.xlsx' % (STREAM_SIZE,s1), {'nan_inf_to_errors': True})
     worksheet1 = workbook.add_worksheet('data_record')
     worksheet1.write(0, 0, "恶意程度")
     worksheet1.write(0, 1, "green2green")

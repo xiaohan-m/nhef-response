@@ -3,6 +3,7 @@
     @Author   :pc chen
     @Describe :定义数据包结构,以及产生数据包的方法（根据不同的强度进行数据包的产生）
 """
+import copy
 
 
 class Package:
@@ -34,6 +35,10 @@ class Package:
 if __name__ == '__main__':
     p = Package(id=5, caller_id=2, receiver_id=8)
     p.message = "测试"
+    p.stream_id =3
     p.ledger = [1, 2, 3, 4, 5]
-    print(p)
+    new_p = copy.deepcopy(p)
+    new_p.stream_id = 4
+    print(p.stream_id)
+    print(new_p.stream_id)
 

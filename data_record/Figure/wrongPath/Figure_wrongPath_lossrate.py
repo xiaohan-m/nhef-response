@@ -215,7 +215,7 @@ if __name__ == '__main__':
     plt.ylim(0, 1.0)
     # plt.ylabel('Rand Index')
     # ax1.set_xlabel("X1", color=c1, fontsize=fontsize)
-    ax1.set_ylabel("Jaccard", color="firebrick", fontsize=20)
+    ax1.set_ylabel("Threat Score", color="firebrick", fontsize=20)
     # ax2.set_xlabel('X2', color=c2, fontsize=fontsize)
     ax2.set_ylabel('Rand Index', color="g", fontsize=20)
     # ax2.set_xlabel('attributes', fontsize=15)
