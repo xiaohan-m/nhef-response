@@ -24,7 +24,7 @@ from matplotlib import pyplot as plt
 from matplotlib.patches import Ellipse
 
 from DataIndex import DataIndex
-from network.ManetTopology import manet_generator, find_net, find_e_subnet, find_e_node
+from network.ManetTopology import manet_generator
 from network.Package import Package
 
 # global 变量
@@ -43,28 +43,34 @@ PACKAGE_LOSS_RATE = 0.0005
 
 # 固定两个恶意节点
 M_new_add = 19  # 发动新增数据包的恶意行为节点node_list[19]:6453
+
 M_new_add_rate = 0.01
 M_wrong_path = 26  # 发动恶意丢包的恶意行为节点node_list[26]:11537
 M_wrong_path_rate = 0.01
 
 # 增加两个恶意节点
-# M_new_add_2 = xx  # 发动新增数据包的恶意行为节点node_list[19]:6453
+M_new_add_2 = 33  # 发动新增数据包的恶意行为节点node_list[33]:3333
 M_new_add_rate_2 = 0.001
-# M_wrong_path_2 = xx  # 发动恶意丢包的恶意行为节点node_list[26]:11537
+M_wrong_path_2 = 12  # 发动恶意丢包的恶意行为节点node_list[12]:5006
 M_wrong_path_rate_2 = 0.001
 
 
 def sim_run(node_list):
     # 接下来是每个时隙都要干的事情
-    global SLOT_NUM,M_new_add,M_wrong_path
+    global SLOT_NUM, M_new_add, M_wrong_path
     slot = 1
     while True:
         flag = 0
         if slot % 10000 == 0:
             print('当前仿真间隙：', slot)
-            print("M_new_add:%s"%len(node_list[M_new_add].full_receive_stream_pool))
-            print("M_wrong_path:%s"%len(node_list[M_wrong_path].full_receive_stream_pool))
-        if len(node_list[M_new_add].full_receive_stream_pool) > 500 and len(node_list[M_wrong_path].full_receive_stream_pool) > 500:
+            print("M_new_add:%s" % len(node_list[M_new_add].full_receive_stream_pool))
+            print("M_new_add_2:%s" % len(node_list[M_new_add_2].full_receive_stream_pool))
+            print("M_wrong_path:%s" % len(node_list[M_wrong_path].full_receive_stream_pool))
+            print("M_wrong_path_2:%s" % len(node_list[M_wrong_path_2].full_receive_stream_pool))
+        if len(node_list[M_new_add].full_receive_stream_pool) > 5000 and len(
+                node_list[M_wrong_path].full_receive_stream_pool) > 5000 and len(
+            node_list[M_new_add_2].full_receive_stream_pool) > 5000 and len(
+            node_list[M_wrong_path_2].full_receive_stream_pool) > 5000:
             break
         # 输出每个节点的流的数量
         generate_message(node_list)
@@ -105,39 +111,39 @@ def generate_message(node_list):
         return None
 
 
-def generate_new_add_packet(node_list):  # 新增恶意数据包
-    global PACKAGE_ID, M_new_add, M_new_add_rate, STREAM_ID, STREAM_SIZE
-    # 以概率mp产生一个新的消息
-    if random.random() < M_new_add_rate:
-        while True:
-            R = random.randint(0, len(node_list) - 1)
-            if R == M_new_add:
-                continue
-            else:
-                break
-        # 随机选择了子网A中的一个节点，与其它任意一个非子网A中的节点
-        # 产生一个新的数据包裹，并对包裹进行初始化
-        new_package = Package(id=PACKAGE_ID, caller_id=node_list[M_new_add].mac,
-                              receiver_id=node_list[R].mac)  # 数据包(数据包编号，发送节点id，接收节点id)
-        new_package.new_add_status = 1
-        # 将包裹放入，发送消息池
-        node_list[M_new_add].buffer_message_pool.append(new_package)
-        for stream in node_list[M_new_add].send_stream_pool:
-            if (stream.caller_id == new_package.caller_id and stream.receiver_id == new_package.receiver_id):
-                new_package.stream_id = stream.id
-                break
-        if new_package.stream_id == -1:
-            new_stream = Stream(STREAM_ID, new_package.caller_id, new_package.receiver_id, STREAM_SIZE)
-            new_package.stream_id = new_stream.id
-            node_list[M_new_add].send_stream_pool.append(new_stream)
-        PACKAGE_ID += 1
-        return True
-    else:
-        return None
+# def generate_new_add_packet(node_list):  # 新增恶意数据包
+#     global PACKAGE_ID, M_new_add, M_new_add_rate, STREAM_ID, STREAM_SIZE
+#     # 以概率mp产生一个新的消息
+#     if random.random() < M_new_add_rate:
+#         while True:
+#             R = random.randint(0, len(node_list) - 1)
+#             if R == M_new_add:
+#                 continue
+#             else:
+#                 break
+#         # 随机选择了子网A中的一个节点，与其它任意一个非子网A中的节点
+#         # 产生一个新的数据包裹，并对包裹进行初始化
+#         new_package = Package(id=PACKAGE_ID, caller_id=node_list[M_new_add].mac,
+#                               receiver_id=node_list[R].mac)  # 数据包(数据包编号，发送节点id，接收节点id)
+#         new_package.new_add_status = 1
+#         # 将包裹放入，发送消息池
+#         node_list[M_new_add].buffer_message_pool.append(new_package)
+#         for stream in node_list[M_new_add].send_stream_pool:
+#             if (stream.caller_id == new_package.caller_id and stream.receiver_id == new_package.receiver_id):
+#                 new_package.stream_id = stream.id
+#                 break
+#         if new_package.stream_id == -1:
+#             new_stream = Stream(STREAM_ID, new_package.caller_id, new_package.receiver_id, STREAM_SIZE)
+#             new_package.stream_id = new_stream.id
+#             node_list[M_new_add].send_stream_pool.append(new_stream)
+#         PACKAGE_ID += 1
+#         return True
+#     else:
+#         return None
 
 
-def is_belongs_to_net(node, net):
-    return node.type == net.type
+# def is_belongs_to_net(node, net):
+#     return node.type == net.type
 
 
 # 产生流
@@ -191,7 +197,7 @@ def transmission_package(node):
 
 # 完成消息的接收
 def receiving_package(node_list, tran_results):
-    global PACKAGE_LOSS_RATE, M_wrong_path, M_wrong_path_rate,M_new_add,M_new_add_rate
+    global PACKAGE_LOSS_RATE, M_wrong_path, M_wrong_path_rate, M_new_add, M_new_add_rate, M_wrong_path_2, M_wrong_path_rate_2, M_new_add_2, M_new_add_rate_2
     k = 0
     while k < len(tran_results):
         if tran_results[k] == None:
@@ -203,7 +209,11 @@ def receiving_package(node_list, tran_results):
             # 加入自然丢包
             if k == M_wrong_path and random.random() < M_wrong_path_rate:
                 new_package.wrong_path_status = 1
+            if k == M_wrong_path_2 and random.random() < M_wrong_path_rate_2:
+                new_package.wrong_path_status = 1
             if k == M_new_add and random.random() < M_new_add_rate:
+                new_package.new_add_status = 1
+            if k == M_new_add_2 and random.random() < M_new_add_rate_2:
                 new_package.new_add_status = 1
             if random.random() < PACKAGE_LOSS_RATE:
                 new_package.loss_status = 1
@@ -283,7 +293,7 @@ def statistics_index(node):
     if TP == 0:
         node.jaccard = 0
         node.fm = 0
-        node.randIndex = (TP + TN) / (TP + FP + FN + TN)
+        node.randIndex = 1
 
 
 def output_data(dataIndexList):
@@ -319,6 +329,7 @@ def output_data(dataIndexList):
     worksheet1.write(i + 3, 0, "系统强度:%s" % TRAFFIC_LOAD)
     workbook.close()
 
+
 def draw_topology(G, node_list):
     nodes = list(G.nodes())
     for N in nodes:
@@ -330,17 +341,21 @@ def draw_topology(G, node_list):
         list_nodes = [nodes for nodes in partition.keys()
                       if partition[nodes] == com]
         nodes_community.append(list_nodes)
-    fig = plt.figure(figsize=(20, 20))
+    fig = plt.figure(figsize=(10, 7))
+    plt.rc('font', family='Times New Roman')
     ax = fig.add_subplot(111)
-    ax.set(xlim=[5, 23], ylim=[13, 21], title='An Example Axes')
-    g = nx.subgraph(G, nodes_community[0] + nodes_community[2] + nodes_community[5])
+    ax.set(xlim=[5, 23], ylim=[13, 23.2], title='An Example Axes')
+    g = nx.subgraph(G, nodes_community[0] + nodes_community[2] + nodes_community[5] + nodes_community[6])
     # 再取一个
     node_labels = nx.get_node_attributes(g, 'value')
-    position_1 = [[16, 15.5], [19, 15.5], [16.3, 13.8], [18, 15], [17.5, 14], [15, 14], [19.5, 14], [21, 14.5]]
-    position_2 = [[18, 18], [15, 18], [17, 19], [21, 17.85], [21.5, 18.48], [20, 17.5], [21.4, 19.2], [18, 19.2],
-                  [19.5, 19], [16, 20], [19.5, 20]]
+    position_1 = [[16.2, 17], [19.2, 17], [16.5, 15.3], [18.2, 16.5], [17.7, 15.5], [15.2, 15.5], [19.7, 15.5],
+                  [21.2, 16]]
+    position_2 = [[18, 20], [15, 20], [17, 21], [21, 19.85], [21.5, 20.48], [20, 19.5], [21.4, 21.2], [18, 21.2],
+                  [19.5, 21], [16, 22], [19.5, 22]]
     position_3 = [[13, 16.5], [9.5, 17], [9, 18.5], [7, 18], [10.5, 16], [11, 18], [9, 15], [11, 15], [6.5, 17],
                   [7, 16]]
+    position_4 = [[10.5, 20.2], [6.2, 21.4], [7.9, 22], [9, 21.1], [7.3, 20.5], [10, 22], [11.4, 21.2],
+                  [6.1, 13.7], [6, 11.7], [6, 17.7]]
     # 加一个子网，然后重新布局
     pos = dict()
     i = 0
@@ -358,9 +373,14 @@ def draw_topology(G, node_list):
         nodes_community[5][i].position = position_3[i]
         pos[nodes_community[5][i]] = position_3[i]
         i += 1
+    i = 0
+    while i < len(nodes_community[6]):
+        nodes_community[6][i].position = position_4[i]
+        pos[nodes_community[6][i]] = position_4[i]
+        i += 1
     # for n in nodes_community[5]:
     #     print(n)
-    print(nodes_community[5])
+    print(nodes_community[6])
     # 加pos
     # nx.draw_networkx(g, pos, with_labels=False)
     cmap = plt.get_cmap('cool')  # 可以选要提取的cmap，如'Spectral'
@@ -381,24 +401,32 @@ def draw_topology(G, node_list):
         elif n in nodes_community[5]:
             nx.draw_networkx_nodes(g, pos, [n], node_color=[cmap(n.jaccard)], node_shape="o", node_size=800,
                                    edgecolors='k')
+        elif n in nodes_community[6]:
+            nx.draw_networkx_nodes(g, pos, [n], node_color=[cmap(n.jaccard)], node_shape="o", node_size=800,
+                                   edgecolors='k')
     new_g = nx.Graph(g)
     nx.draw_networkx_labels(new_g, pos, labels=node_labels, font_color='k', font_size=8, alpha=1)
     nx.draw_networkx_labels(new_g, pos, labels={nodes_community[2][1]: '%.2f' % nodes_community[2][1].jaccard,
-                                                nodes_community[5][4]: '%.2f' % nodes_community[5][4].jaccard},
+                                                nodes_community[5][4]: '%.2f' % nodes_community[5][4].jaccard,
+                                                nodes_community[0][1]: '%.2f' % nodes_community[0][1].jaccard,
+                                                nodes_community[6][0]: '%.2f' % nodes_community[6][0].jaccard,
+                                                },
                             font_color='white', font_size=8, alpha=1)
     node_remove_list = [8047, 4129, 7914, 11090, 11812]
     for n in nodes:
         if n.mac in node_remove_list:
             new_g.remove_edge(n, n)
     nx.draw_networkx_edges(new_g, pos)
-    ellipse_A = Ellipse((17.7, 14.6), width=7.8, height=2.9, alpha=0.2, color='b')
-    ellipse_B = Ellipse((18, 18.7), width=8.8, height=3.8, alpha=0.2, color='#073763')
-    ellipse_C = Ellipse((9.7, 16.7), width=8.4, height=4.5, alpha=0.2, color='#674ea7')
+    ellipse_A = Ellipse((18, 16.1), width=7.8, height=3.7, alpha=0.2, color='#DB7093')
+    ellipse_B = Ellipse((18, 20.7), width=8.8, height=3.8, alpha=0.2, color='#eb8e55')
+    ellipse_C = Ellipse((9.7, 16.7), width=8.4, height=4.5, alpha=0.2, color='#9370DB')
+    ellipse_D = Ellipse((9, 21.1), width=7, height=3.4, alpha=0.2, color='#87ceeb')
     # circle_B = Circle(xy=(19.5, 18), radius=2.6, alpha=0.2, color='#073763')
     # circle_C = Circle(xy=(9.5, 16), radius=2.6, alpha=0.2, color='#674ea7')
     ax.add_patch(ellipse_A)
     ax.add_patch(ellipse_B)
     ax.add_patch(ellipse_C)
+    ax.add_patch(ellipse_D)
     now = datetime.now()
     s1 = now.strftime("%Y_%m%d_%H%M")
     # plt.text(5.5, 20.7, "Unexpected generating:%s" % MP, fontsize=12, wrap=True)
@@ -414,10 +442,22 @@ def draw_topology(G, node_list):
     #              arrowprops=dict(arrowstyle="->", connectionstyle="arc3"))
     # plt.annotate(' Malicious node\nwith threats 1&6', fontsize=12, xy=(10.3, 15.7), xytext=(7.5, 13.5),
     #              arrowprops=dict(arrowstyle="->", connectionstyle="arc3"))
-    plt.annotate(' Malicious node', fontsize=12, xy=(14.7, 18.2), xytext=(9.8, 19.2),
+    plt.annotate('Incorrect forwarding\n(Threats 1&6)\nMalicious:0.01', fontsize=12, xy=(14.8, 20.3), xytext=(12.4, 22),
                  arrowprops=dict(arrowstyle="->", connectionstyle="arc3"))
-    plt.annotate(' Malicious node', fontsize=12, xy=(10.3, 15.7), xytext=(7.5, 13.5),
+    plt.text(15.45, 19.65, "Node #11537", fontsize=12, color="red",wrap=True)
+
+    plt.annotate('Unexpected packets\n(Threats 2-4)\nMalicious:0.001', fontsize=12, xy=(10.1, 20.1), xytext=(5.5, 19),
                  arrowprops=dict(arrowstyle="->", connectionstyle="arc3"))
+    plt.text(11, 20.1, "Node #3333", fontsize=12,  color="red",wrap=True)
+
+    plt.annotate('Unexpected packets\n(Threats 2-4)\nMalicious:0.01', fontsize=12, xy=(10.1, 15.9), xytext=(5.5, 14.5),
+                 arrowprops=dict(arrowstyle="->", connectionstyle="arc3"))
+    plt.text(8.1, 16, "Node #6453", fontsize=12,color="red", wrap=True)
+
+    plt.annotate('Incorrect forwarding\n(Threats 1&6)\nMalicious:0.001', fontsize=12, xy=(19.6, 17.2), xytext=(19.6, 17.9),
+                 arrowprops=dict(arrowstyle="->", connectionstyle="arc3"))
+    plt.text(19.8, 16.9, "Node #5006", fontsize=12,color="red", wrap=True)
+
     # ax2 = plt.axes([0.84, 0.12, 0.02, 0.3])
     # cb = matplotlib.colorbar.ColorbarBase(ax2, norm=cNorm, cmap=cmap, orientation="vertical", ticklocation='right',
     #                                       ticks=[0, 0.5, 1], label="Maliciousness")
@@ -427,17 +467,17 @@ def draw_topology(G, node_list):
     # # plt.colorbar(scalarMap,
     # #              cax=ax, orientation='vertical', label='Some Units')
 
+
 if __name__ == '__main__':
     G, SUBNET_LIST = manet_generator()
     node_list = list(G.nodes())
     in_detection_p = 1
     out_detection_p = 1
     dataIndexList = list()
-    # sim_run(node_list)
+    sim_run(node_list)
 
     for node in node_list:
         # 计算出每个节点的流的类型数量，然后计算节点相应的指标值
-        # statistics_index(node)
-        node.jaccard = 0.5
+        statistics_index(node)
         # 统计完指标就可以进行绘图了
-    draw_topology(G,node_list)
+    draw_topology(G, node_list)

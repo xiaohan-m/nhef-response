@@ -186,13 +186,13 @@ if __name__ == '__main__':
     plt.rcParams['font.sans-serif'] = 'SimSun'
     plt.plot(x_array1, y_Jaccard1, 'o', linewidth=1.5, color="firebrick", linestyle="-", markerfacecolor='white',
              markersize=5,
-             markeredgecolor='firebrick', label='lossrate:0.0001')
+             markeredgecolor='firebrick', label='Packet loss:0.0001')
     plt.plot(x_array2, y_Jaccard2, 's', linewidth=1.5, color="firebrick", linestyle="-", markerfacecolor='white',
              markersize=5,
-             markeredgecolor='firebrick', label='lossrate:0.0005')
+             markeredgecolor='firebrick', label='Packet loss:0.0005')
     plt.plot(x_array3, y_Jaccard3, '^', linewidth=1.5, color="firebrick", linestyle="-", markerfacecolor='white',
              markersize=5,
-             markeredgecolor='firebrick', label='lossrate:0.001')
+             markeredgecolor='firebrick', label='Packet loss:0.001')
     # plt.legend(loc='lower right')
     plt.ylim(0, 1.0)
     # plt.ylabel('Jaccard')
@@ -204,13 +204,13 @@ if __name__ == '__main__':
     # ax2.spines['right'].set_visible(False)  # 去掉右边框
     plt.plot(x_array1, y_RandIndex1, 'o', linewidth=1.2, color="g", linestyle="--", markerfacecolor='white',
              markersize=5,
-             markeredgecolor='g', label='lossrate:0.0001')
+             markeredgecolor='g', label='Packet loss:0.0001')
     plt.plot(x_array2, y_RandIndex2, 's', linewidth=1.2, color="g", linestyle="--", markerfacecolor='white',
              markersize=5,
-             markeredgecolor='g', label='lossrate:0.0005')
+             markeredgecolor='g', label='Packet loss:0.0005')
     plt.plot(x_array3, y_RandIndex3, '^', linewidth=1.2, color="g", linestyle="--", markerfacecolor='white',
              markersize=5,
-             markeredgecolor='g', label='lossrate:0.001')
+             markeredgecolor='g', label='Packet loss:0.001')
     # plt.legend(loc=[0.7,0.05])
     plt.ylim(0, 1.0)
     # plt.ylabel('Rand Index')

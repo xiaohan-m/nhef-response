@@ -36,7 +36,7 @@ def sim_run(env, node_list, wrongPathRate):
     while True:
         if env.now % 10000 == 0:
             print('当前仿真间隙：', env.now)
-        if len(COMPLETE_RECEIVE_STREAM_POOL) >= 1000:
+        if len(COMPLETE_RECEIVE_STREAM_POOL) >= 3000:
             # print('当前仿真间隙：', env.now, "当前检测概率：", dp, "当前节点恶意程度:", mp)
             break
         generate_message(node_list)
